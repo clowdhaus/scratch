@@ -20,16 +20,19 @@ jobs:
 
       - name: Get the release version from the tag
         shell: bash
-        if: env.RG_VERSION == ''
+        if: env.SCRATCH_VERSION == ''
         run: |
-          echo "RG_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-          echo "version is: ${{ env.RG_VERSION }}"
+          echo "SCRATCH_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          echo "version is: ${{ env.SCRATCH_VERSION }}"
 
       - name: Generate a changelog
         id: changelog
         uses: orhun/git-cliff-action@v2
         with:
-          args: -vv --latest --strip header -o CHANGELOG.md
+          args: --latest --strip header -o CHANGELOG.md
+
+      - name: Check release
+        run: cat CHANGELOG.md
 
       - name: Release
         id: release
@@ -126,7 +129,6 @@ jobs:
         mkdir -p "${STAGING}"
 
         cp {README.md,LICENSE} "${STAGING}/"
-        cp complete/_rg "${STAGING}/complete/"
 
         if [ "${{ matrix.os }}" = "windows-2022" ]; then
           cp "target/${{ matrix.target }}/release/scratch.exe" "${STAGING}/"
