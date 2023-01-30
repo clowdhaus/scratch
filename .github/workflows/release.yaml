@@ -73,6 +73,10 @@ jobs:
           os: macos-12
           rust: nightly
           target: x86_64-apple-darwin
+        - build: macos-arm
+          os: macos-12
+          rust: nightly
+          target: aarch64-apple-darwin
         - build: win-msvc
           os: windows-2022
           rust: nightly
@@ -119,7 +123,7 @@ jobs:
       run: strip "target/${{ matrix.target }}/release/scratch"
 
     - name: Strip release binary (arm)
-      if: matrix.build == 'linux-arm'
+      if: matrix.build == 'linux-arm' ||  matrix.build == 'macos-arm'
       run: |
         docker run --rm -v \
           "$PWD/target:/target:Z" \
