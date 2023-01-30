@@ -13,11 +13,20 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.release.outputs.upload_url }}
+      scratch_version: ${{ env.SCRATCH_VERSION }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Get the release version from the tag
+        shell: bash
+        if: env.RG_VERSION == ''
+        run: |
+          echo "RG_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          echo "version is: ${{ env.RG_VERSION }}"
+
       - name: Generate a changelog
+        id: changelog
         uses: orhun/git-cliff-action@v2
         with:
           args: -vv --latest --strip header
@@ -28,7 +37,7 @@ jobs:
         id: release
         uses: softprops/action-gh-release@v1
         with:
-          body: ${{ steps.git-cliff.outputs.content }}
+          body: ${{ steps.changelog.outputs.release_body }}
 
   build-release:
     name: build-release
@@ -115,8 +124,7 @@ jobs:
     - name: Build archive
       shell: bash
       run: |
-        outdir="$(ci/cargo-out-dir "${{ env.TARGET_DIR }}")"
-        STAGING="scratch-${{ needs.create-release.outputs.rg_version }}-${{ matrix.target }}"
+        STAGING="scratch-${{ needs.create-release.outputs.scratch_version }}-${{ matrix.target }}"
         mkdir -p "${STAGING}"
 
         cp {README.md,LICENSE} "${STAGING}/"
